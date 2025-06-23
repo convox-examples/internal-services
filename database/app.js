@@ -4,7 +4,9 @@ const util = require('util');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const serviceName = process.env.SERVICE_NAME || 'database';
+const serviceName = process.env.SERVICE || 'database';
+const rack = process.env.RACK || 'unknown-rack';
+const appName = process.env.APP || 'unknown-app';
 const execAsync = util.promisify(exec);
 
 app.use(express.json());
@@ -24,8 +26,8 @@ app.get('/', (req, res) => {
     message: `Hello from ${serviceName} service!`,
     service: serviceName,
     type: 'internal',
-    rack: process.env.RACK,
-    app: process.env.APP,
+    rack: rack,
+    app: appName,
     timestamp: new Date().toISOString(),
     endpoints: [
       'GET / - This page',
@@ -51,8 +53,8 @@ app.get('/status', (req, res) => {
       connections: Math.floor(Math.random() * 20) + 5,
       last_backup: new Date(Date.now() - Math.random() * 86400000).toISOString()
     },
-    rack: process.env.RACK,
-    app: process.env.APP,
+    rack: rack,
+    app: appName,
     timestamp: new Date().toISOString()
   });
 });
@@ -114,14 +116,14 @@ app.get('/network-debug', async (req, res) => {
     service: serviceName,
     hostname: require('os').hostname(),
     memory_usage: process.memoryUsage(),
-    rack: process.env.RACK,
-    app: process.env.APP,
+    rack: rack,
+    app: appName,
     timestamp: new Date().toISOString()
   };
 
   try {
     // Test connectivity to API service
-    const apiHostname = `api.${process.env.RACK}-${process.env.APP}.svc.cluster.local`;
+    const apiHostname = `api.${rack}-${appName}.svc.cluster.local`;
     const { stdout: ping } = await execAsync(`ping -c 3 ${apiHostname}`);
     debug.api_connectivity = ping.split('\n');
   } catch (error) {
@@ -141,9 +143,9 @@ app.get('/network-debug', async (req, res) => {
     debug.environment = {
       NODE_ENV: process.env.NODE_ENV || 'development',
       PORT: process.env.PORT,
-      SERVICE_NAME: process.env.SERVICE_NAME,
-      RACK: process.env.RACK,
-      APP: process.env.APP
+      SERVICE: serviceName,
+      RACK: rack,
+      APP: appName
     };
   } catch (error) {
     debug.env_error = error.message;
@@ -156,8 +158,8 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`${serviceName} service listening on port ${port}`);
   console.log(`Service type: internal (rack-only access)`);
   console.log(`Environment:`, {
-    RACK: process.env.RACK,
-    APP: process.env.APP,
-    SERVICE: process.env.SERVICE
+    RACK: rack,
+    APP: appName,
+    SERVICE: serviceName
   });
 });

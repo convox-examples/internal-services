@@ -4,16 +4,15 @@ const util = require('util');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const serviceName = process.env.SERVICE_NAME || 'frontend';
+const serviceName = process.env.SERVICE || 'frontend';
+const rack = process.env.RACK || 'unknown-rack';
+const appName = process.env.APP || 'unknown-app';
 const execAsync = util.promisify(exec);
 
 app.use(express.json());
 
 // Function to build internal service URL
 function getInternalServiceUrl(serviceName) {
-  // Get rack and app from environment variables that Convox sets
-  const rack = process.env.RACK || 'unknown-rack';
-  const appName = process.env.APP || 'unknown-app';
   return `http://${serviceName}.${rack}-${appName}.svc.cluster.local:3000`;
 }
 
@@ -54,9 +53,9 @@ app.get('/test-internal', async (req, res) => {
   
   const results = {
     service: serviceName,
-    rack: process.env.RACK,
-    app: process.env.APP,
-    namespace: `${process.env.RACK}-${process.env.APP}`,
+    rack: rack,
+    app: appName,
+    namespace: `${rack}-${appName}`,
     timestamp: new Date().toISOString(),
     urls_tested: {
       api: apiUrl,
@@ -146,9 +145,9 @@ app.get('/debug-env', (req, res) => {
   res.json({
     service: serviceName,
     convox_vars: {
-      RACK: process.env.RACK,
-      APP: process.env.APP,
-      SERVICE: process.env.SERVICE,
+      RACK: rack,
+      APP: appName,
+      SERVICE: serviceName,
       RELEASE: process.env.RELEASE,
       BUILD: process.env.BUILD
     },
@@ -161,8 +160,8 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`${serviceName} service listening on port ${port}`);
   console.log(`Service type: external (publicly accessible)`);
   console.log(`Environment:`, {
-    RACK: process.env.RACK,
-    APP: process.env.APP,
-    SERVICE: process.env.SERVICE
+    RACK: rack,
+    APP: appName,
+    SERVICE: serviceName
   });
 });
