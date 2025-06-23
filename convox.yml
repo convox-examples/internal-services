@@ -1,0 +1,26 @@
+environment:
+  - PORT=3000
+
+services:
+  # External service - publicly accessible
+  frontend:
+    build: ./frontend
+    port: 3000
+    environment:
+      - SERVICE_NAME=frontend
+
+  # Internal service 1 - API service
+  api:
+    build: ./api
+    internal: true
+    port: 3000
+    environment:
+      - SERVICE_NAME=api
+
+  # Internal service 2 - Database service
+  database:
+    build: ./database
+    internal: true
+    port: 3000
+    environment:
+      - SERVICE_NAME=database
